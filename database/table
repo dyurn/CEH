@@ -7,3 +7,4 @@ CREATE TABLE questions_answers (
     answer_d TEXT,
     correct VARCHAR(10) NOT NULL
 );
+
