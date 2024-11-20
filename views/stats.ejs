@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Statistics</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <%- include('partials/navbar.ejs') %>
+    <div class="container mt-4">
+        <h1 class="text-center">Player Statistics</h1>
+        <div class="row mt-5">
+            <div class="col-md-6">
+                <h3>Performance Overview</h3>
+                <svg id="bar-chart" width="400" height="300"></svg>
+            </div>
+            <div class="col-md-6">
+                <h3>Correct vs Incorrect</h3>
+                <svg id="pie-chart" width="400" height="300"></svg>
+            </div>
+        </div>
+        <% if (stats.incorrectQuestionIds.length > 0) { %>
+            <a href="/replay-incorrect" class="btn btn-danger mt-3">Replay Incorrect Questions</a>
+        <% } else { %>
+            <p class="text-success">You have no incorrect answers to replay. Great job!</p>
+        <% } %>
+    </div>
+</body>
+<script>
+    // Données des statistiques (envoyées depuis le serveur)
+    const stats = {
+        correctAnswers: <%= stats.correctAnswers %>,
+        incorrectAnswers: <%= stats.incorrectAnswers %>
+    };
+
+    // Préparer les données pour les graphiques
+    const totalAnswers = stats.correctAnswers + stats.incorrectAnswers;
+    const barData = [
+        { label: "Correct", value: stats.correctAnswers },
+        { label: "Incorrect", value: stats.incorrectAnswers },
+    ];
+    const pieData = [
+        { label: "Correct", value: stats.correctAnswers },
+        { label: "Incorrect", value: stats.incorrectAnswers },
+    ];
+
+    // Dimensions des graphiques
+    const width = 400, height = 300;
+
+    // === Graphique à barres ===
+    const barChart = d3.select("#bar-chart")
+        .attr("width", width)
+        .attr("height", height);
+
+    const barScale = d3.scaleLinear()
+        .domain([0, totalAnswers])
+        .range([0, height - 50]);
+
+    barChart.selectAll("rect")
+        .data(barData)
+        .enter()
+        .append("rect")
+        .attr("x", (d, i) => i * 150 + 50) // Espacement horizontal
+        .attr("y", d => height - barScale(d.value) - 30) // Position verticale
+        .attr("width", 100) // Largeur de chaque barre
+        .attr("height", d => barScale(d.value)) // Hauteur proportionnelle aux données
+        .attr("fill", d => d.label === "Correct" ? "green" : "red");
+
+    barChart.selectAll("text")
+        .data(barData)
+        .enter()
+        .append("text")
+        .attr("x", (d, i) => i * 150 + 100) // Position horizontale
+        .attr("y", d => height - barScale(d.value) - 35) // Position verticale
+        .attr("text-anchor", "middle")
+        .text(d => `${d.value}`);
+
+    // === Graphique circulaire (Pie Chart) ===
+    const pieChart = d3.select("#pie-chart")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+    const pie = d3.pie()
+        .value(d => d.value);
+
+    const arc = d3.arc()
+        .innerRadius(50)
+        .outerRadius(100);
+
+    const color = d3.scaleOrdinal()
+        .domain(pieData.map(d => d.label))
+        .range(["green", "red"]);
+
+    pieChart.selectAll("path")
+        .data(pie(pieData))
+        .enter()
+        .append("path")
+        .attr("d", arc)
+        .attr("fill", d => color(d.data.label));
+
+    pieChart.selectAll("text")
+        .data(pie(pieData))
+        .enter()
+        /*.append("text")*/
+        .attr("transform", d => `translate(${arc.centroid(d)})`)
+        .attr("text-anchor", "middle")
+        .text(d => `${d.data.label}: ${d.data.value}`);
+</script>
+</html>

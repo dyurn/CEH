@@ -1,0 +1,9 @@
+CREATE TABLE questions_answers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    question TEXT NOT NULL,
+    answer_a TEXT NOT NULL,
+    answer_b TEXT,
+    answer_c TEXT,
+    answer_d TEXT,
+    correct VARCHAR(10) NOT NULL
+);
